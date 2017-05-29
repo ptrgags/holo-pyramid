@@ -1,16 +1,19 @@
 package io.github.ptrgags.holopyramid
 import android.content.Context
-import android.util.Log
+import android.opengl.GLES20
 import android.view.KeyEvent
 import android.view.MotionEvent
 import org.rajawali3d.cameras.Camera
-import org.rajawali3d.lights.ALight
 import org.rajawali3d.lights.DirectionalLight
 import org.rajawali3d.materials.Material
 import org.rajawali3d.materials.methods.DiffuseMethod
+import org.rajawali3d.materials.textures.ATexture
 import org.rajawali3d.math.vector.Vector3
+import org.rajawali3d.primitives.ScreenQuad
 import org.rajawali3d.primitives.Torus
+import org.rajawali3d.renderer.RenderTarget
 import org.rajawali3d.renderer.Renderer;
+import org.rajawali3d.scene.Scene
 
 /**
  * NOTE: This is temporary to help me learn the Rajawali library
@@ -19,8 +22,23 @@ import org.rajawali3d.renderer.Renderer;
  * http://www.clintonmedbery.com/basic-rajawali3d-tutorial-for-android/
  */
 class ExampleRenderer : Renderer {
-    val model = Torus(1.0f, 0.5f, 20, 10);
+    companion object {
+        val NUM_DIRECTIONS = 4;
+    }
+
+    val model = Torus(1.0f, 0.5f, 40, 20);
     var cameraNum = 0
+
+    /**
+     * This scene is to hold the four planes that represent
+     * the four views of the object. It uses a default camera
+     */
+    var scene2d: Scene? = null
+    /**
+     * This scene has the object and the four cameras
+     */
+    var scene3d: Scene? = null
+    val holoTargets: MutableList<RenderTarget> = mutableListOf()
 
     constructor(context: Context?): super(context) {
         setFrameRate(60)
@@ -44,46 +62,90 @@ class ExampleRenderer : Renderer {
             model.rotate(Vector3.Axis.Y, -3.0)
     }
 
-    override fun initScene() {
-        // Add two directional lights
+    fun initScene2d() {
+        scene2d = Scene(this)
+
+        //Make the screen quads
+        for (i in 0 until NUM_DIRECTIONS) {
+            //Make a render target
+            val target = RenderTarget(
+                    "holoView${i}",
+                    mDefaultViewportWidth / 4,
+                    mDefaultViewportHeight / 4)
+            target.fullscreen = false
+            addRenderTarget(target)
+            holoTargets.add(target)
+
+            //Make the material
+            val mat = Material()
+            mat.colorInfluence = 0.0f
+            try {
+                mat.addTexture(target.texture)
+            } catch (e: ATexture.TextureException) {
+                e.printStackTrace()
+            }
+
+            //Make the quad
+            val quad = ScreenQuad()
+            quad.scaleY = 0.25
+            quad.scaleX = 0.25
+            quad.y = -0.25 - 0.125 + 0.25 * i
+            quad.material = mat
+            scene2d?.addChild(quad)
+        }
+    }
+
+    fun initScene3d() {
+        //Make the scene and remove all cameras
+        scene3d = Scene(this)
+        scene3d?.clearCameras()
+
+        // Add a purple light shining from the front
         val frontLight = DirectionalLight(1.0, 0.2, -1.0)
         frontLight.setColor(0.5f, 0.0f, 1.0f)
         frontLight.power = 2.0f
-        currentScene.addLight(frontLight)
+        scene3d?.addLight(frontLight)
+
+        // Add a green light shining from the back
         val backLight = DirectionalLight(-1.0, 0.2, 1.0)
         backLight.setColor(0.0f, 1.0f, 0.0f)
         backLight.power = 2.0f
-        currentScene.addLight(backLight)
+        scene3d?.addLight(backLight)
 
-        //Material for shading the torus
-        val material = Material()
-        material.enableLighting(true)
-        material.diffuseMethod = DiffuseMethod.Lambert()
-        material.color = 0xFFFFFF;
+        // Make the torus white with diffuse lighting
+        val torusMaterial = Material()
+        torusMaterial.enableLighting(true)
+        torusMaterial.diffuseMethod = DiffuseMethod.Lambert()
+        torusMaterial.color = 0xFFFFFF
+        model.material = torusMaterial
+        scene3d?.addChild(model)
 
-        model.material = material
-        currentScene.addChild(model)
+        // Make the four cameras counterclockwise around the y axis
+        for (i in 0 until NUM_DIRECTIONS) {
+            val CAMERA_RADIUS = 7.0;
+            val x = CAMERA_RADIUS * Math.cos(i * Math.PI / 2.0)
+            val z = CAMERA_RADIUS * Math.sin(i * Math.PI / 2.0)
+            val cam = Camera()
+            cam.position = Vector3(x, 0.0, z)
+            cam.lookAt = Vector3(0.0)
+            cam.setProjectionMatrix(
+                    mDefaultViewportWidth / 4, mDefaultViewportHeight / 4)
+            scene3d?.addCamera(cam)
+        }
 
-        //Add the four cameras
-        val frontCam = Camera()
-        frontCam.position = Vector3(0.0, 0.0, 5.0)
-        frontCam.lookAt = Vector3(0.0)
-        val leftCam = Camera()
-        leftCam.position = Vector3(5.0, 0.0, 0.0)
-        leftCam.lookAt = Vector3(0.0)
-        val backCam = Camera()
-        backCam.position = Vector3(0.0, 0.0, -5.0)
-        backCam.lookAt = Vector3(0.0)
-        val rightCam = Camera()
-        rightCam.position = Vector3(-5.0, 0.0, 0.0)
-        rightCam.lookAt = Vector3(0.0)
+        scene3d?.switchCamera(0)
+    }
 
-        // Add the cameras to the scene
-        currentScene.clearCameras();
-        currentScene.addAndSwitchCamera(frontCam)
-        currentScene.addCamera(leftCam)
-        currentScene.addCamera(backCam)
-        currentScene.addCamera(rightCam)
+    override fun initScene() {
+        // Make the new scenes
+        initScene2d()
+        initScene3d()
+
+        //Replace the default scene with the two scenes
+        clearScenes()
+        addScene(scene3d)
+        addScene(scene2d)
+        switchScene(0)
     }
 
     override fun onOffsetsChanged(
@@ -95,4 +157,30 @@ class ExampleRenderer : Renderer {
             yPixelOffset: Int) {
     }
 
+    override fun onRender(ellapsedRealtime: Long, deltaTime: Double) {
+        model.rotate(Vector3.Axis.Y, 1.0);
+
+        // Switch to the 3D scene to render the four textures
+        switchSceneDirect(scene3d)
+
+        //Shrink the viewport to something smaller.
+        GLES20.glViewport(
+                0, 0, mDefaultViewportWidth / 4, mDefaultViewportHeight / 4)
+
+        // Render each plane
+        for (i in 0 until NUM_DIRECTIONS) {
+            currentScene.switchCamera(i)
+            renderTarget = holoTargets[i]
+            render(ellapsedRealtime, deltaTime)
+        }
+
+        // Switch to the 2D scene to render to the screen
+        switchSceneDirect(scene2d)
+
+        //Reset the viewport
+        GLES20.glViewport(0, 0, mDefaultViewportWidth, mDefaultViewportHeight)
+
+        renderTarget = null
+        render(ellapsedRealtime, deltaTime)
+    }
 }
