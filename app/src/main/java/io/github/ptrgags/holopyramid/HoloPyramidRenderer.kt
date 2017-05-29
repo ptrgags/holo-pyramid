@@ -90,8 +90,14 @@ class HoloPyramidRenderer : Renderer {
             val quad = ScreenQuad()
             quad.scaleY = 0.25
             quad.scaleX = 0.25
-            quad.y = -0.25 - 0.125 + 0.25 * i
             quad.material = mat
+
+            // Distance from center screen to the circle that connects
+            // the centers of all the quads
+            val QUAD_RADIUS = 0.25
+            val aspectRatio = mDefaultViewportWidth.toDouble() / mDefaultViewportHeight;
+            quad.x = QUAD_RADIUS * Math.cos(i * Math.PI / 2.0)
+            quad.y = QUAD_RADIUS * aspectRatio * Math.sin(i * Math.PI / 2.0)
             scene2d?.addChild(quad)
         }
     }
@@ -177,9 +183,6 @@ class HoloPyramidRenderer : Renderer {
 
         // Switch to the 3D scene to render the four textures
         switchSceneDirect(scene3d)
-
-        // Since the cameras flip the faces upside down, switch to
-        // front-face culling instead of back-face
 
         //Shrink the viewport to something smaller.
         GLES20.glViewport(
