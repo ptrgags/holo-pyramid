@@ -10,7 +10,7 @@ import org.rajawali3d.view.ISurface
 import org.rajawali3d.view.SurfaceView
 
 class MainActivity : AppCompatActivity() {
-    var renderer: ExampleRenderer? = null
+    var renderer: HoloPyramidRenderer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
                 surface,
                 ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT))
 
-        renderer = ExampleRenderer(this)
+        renderer = HoloPyramidRenderer(this)
         surface.setSurfaceRenderer(renderer)
     }
 

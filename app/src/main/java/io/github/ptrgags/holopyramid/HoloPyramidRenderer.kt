@@ -5,6 +5,7 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import org.rajawali3d.cameras.Camera
 import org.rajawali3d.lights.DirectionalLight
+import org.rajawali3d.lights.PointLight
 import org.rajawali3d.materials.Material
 import org.rajawali3d.materials.methods.DiffuseMethod
 import org.rajawali3d.materials.textures.ATexture
@@ -21,7 +22,7 @@ import org.rajawali3d.scene.Scene
  * This is the tutorial here but done in Kotlin:
  * http://www.clintonmedbery.com/basic-rajawali3d-tutorial-for-android/
  */
-class ExampleRenderer : Renderer {
+class HoloPyramidRenderer : Renderer {
     companion object {
         val NUM_DIRECTIONS = 4;
     }
@@ -100,17 +101,29 @@ class ExampleRenderer : Renderer {
         scene3d = Scene(this)
         scene3d?.clearCameras()
 
-        // Add a purple light shining from the front
-        val frontLight = DirectionalLight(1.0, 0.2, -1.0)
-        frontLight.setColor(0.5f, 0.0f, 1.0f)
-        frontLight.power = 2.0f
-        scene3d?.addLight(frontLight)
+        //Make the model use back faces since the camera will be flipped
+        model.isBackSided = true;
 
-        // Add a green light shining from the back
-        val backLight = DirectionalLight(-1.0, 0.2, 1.0)
-        backLight.setColor(0.0f, 1.0f, 0.0f)
-        backLight.power = 2.0f
-        scene3d?.addLight(backLight)
+        // Add a purple light shining from directly above
+        val light1 = PointLight();
+        light1.setPosition(0.0, 1.5, 0.0)
+        light1.setColor(0.5f, 0.0f, 1.0f)
+        light1.power = 2.0f
+        scene3d?.addLight(light1)
+
+        // Add a green light shining from directly below
+        val light2 = PointLight();
+        light2.setPosition(0.0, -1.5, 0.0)
+        light2.setColor(0.0f, 1.0f, 0.0f)
+        light2.power = 2.0f
+        scene3d?.addLight(light2)
+
+        // Add a white light shining from the front
+        val light3 = PointLight();
+        light3.setPosition(0.0, 0.0, 1.5)
+        light3.setColor(1.0f, 1.0f, 1.0f)
+        light3.power = 1.5f
+        scene3d?.addLight(light3)
 
         // Make the torus white with diffuse lighting
         val torusMaterial = Material()
@@ -125,7 +138,9 @@ class ExampleRenderer : Renderer {
             val CAMERA_RADIUS = 7.0;
             val x = CAMERA_RADIUS * Math.cos(i * Math.PI / 2.0)
             val z = CAMERA_RADIUS * Math.sin(i * Math.PI / 2.0)
-            val cam = Camera()
+            val angle = 90.0 + 90.0 * i
+
+            val cam = HoloPyramidCamera(angle)
             cam.position = Vector3(x, 0.0, z)
             cam.lookAt = Vector3(0.0)
             cam.setProjectionMatrix(
@@ -162,6 +177,9 @@ class ExampleRenderer : Renderer {
 
         // Switch to the 3D scene to render the four textures
         switchSceneDirect(scene3d)
+
+        // Since the cameras flip the faces upside down, switch to
+        // front-face culling instead of back-face
 
         //Shrink the viewport to something smaller.
         GLES20.glViewport(
