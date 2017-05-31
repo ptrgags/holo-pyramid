@@ -97,7 +97,7 @@ class HoloPyramidRenderer : Renderer {
             val QUAD_RADIUS = 0.25
             val aspectRatio = mDefaultViewportWidth.toDouble() / mDefaultViewportHeight;
             quad.x = QUAD_RADIUS * Math.cos(i * Math.PI / 2.0)
-            quad.y = QUAD_RADIUS * aspectRatio * Math.sin(i * Math.PI / 2.0)
+            quad.y = QUAD_RADIUS * aspectRatio * -Math.sin(i * Math.PI / 2.0)
             scene2d?.addChild(quad)
         }
     }
