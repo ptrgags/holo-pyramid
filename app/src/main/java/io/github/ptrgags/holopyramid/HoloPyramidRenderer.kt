@@ -191,10 +191,21 @@ class HoloPyramidRenderer : Renderer {
         model?.material = torusMaterial
         scene3d?.addChild(model)
 
+        // Calculate the maximum dimension in the xz-plane
+        val bbox = model?.boundingBox
+        val minDims = bbox?.min ?: Vector3()
+        val maxDims = bbox?.max ?: Vector3()
+        val dims = maxDims.subtract(minDims)
+        val maxSize = Math.max(dims.x, dims.z)
+
+        // Scale down the model so its maximum dimension is 1.
+        val scale = 1.0 / maxSize
+        Log.i("holobanana", scale.toString())
+        model?.setScale(scale, scale, scale)
+
         // Make the four cameras counterclockwise around the y axis
         for (i in 0 until NUM_DIRECTIONS) {
-            //TODO: Calculate from object bounding box
-            val CAMERA_RADIUS = 4.0
+            val CAMERA_RADIUS = 2.0
             val x = CAMERA_RADIUS * Math.sin(i * Math.PI / 2.0)
             val z = CAMERA_RADIUS * Math.cos(i * Math.PI / 2.0)
             val angle = 90.0 * i
