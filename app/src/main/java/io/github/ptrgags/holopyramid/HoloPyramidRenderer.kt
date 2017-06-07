@@ -3,9 +3,12 @@ import android.content.Context
 import android.opengl.GLES20
 import android.view.KeyEvent
 import android.view.MotionEvent
+import org.rajawali3d.Object3D
 import org.rajawali3d.cameras.Camera
 import org.rajawali3d.lights.DirectionalLight
 import org.rajawali3d.lights.PointLight
+import org.rajawali3d.loader.LoaderOBJ
+import org.rajawali3d.loader.ParsingException
 import org.rajawali3d.materials.Material
 import org.rajawali3d.materials.methods.DiffuseMethod
 import org.rajawali3d.materials.textures.ATexture
@@ -27,7 +30,7 @@ class HoloPyramidRenderer : Renderer {
         val NUM_DIRECTIONS = 4;
     }
 
-    val model = Torus(1.0f, 0.5f, 40, 20);
+    var model: Object3D? = null
     var cameraNum = 0
 
     /**
@@ -58,11 +61,30 @@ class HoloPyramidRenderer : Renderer {
 
     fun onKeyDown(keyCode: Int, event: KeyEvent?) {
         if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT)
-            model.rotate(Vector3.Axis.Y, 3.0)
+            model?.rotate(Vector3.Axis.Y, 3.0)
         else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
-            model.rotate(Vector3.Axis.Y, -3.0)
+            model?.rotate(Vector3.Axis.Y, -3.0)
     }
 
+    /**
+     * Initialize the 2D scene with the four ScreenQuads that are textured
+     * with the four views of the object.
+     *
+     *  Scene layout
+     *
+     *         quad 2 (cam 2)
+     *
+     *  quad 3 (cam 3)     quad 1 (cam 1)
+     *
+     *          quad 0 (cam 0)
+     *
+     *   +y
+     *   |
+     *   |
+     *   |
+     *   +------- +x
+     *
+     */
     fun initScene2d() {
         scene2d = Scene(this)
 
@@ -95,40 +117,71 @@ class HoloPyramidRenderer : Renderer {
             // Distance from center screen to the circle that connects
             // the centers of all the quads
             val QUAD_RADIUS = 0.25
-            val aspectRatio = mDefaultViewportWidth.toDouble() / mDefaultViewportHeight;
-            quad.x = QUAD_RADIUS * Math.cos(i * Math.PI / 2.0)
-            quad.y = QUAD_RADIUS * aspectRatio * -Math.sin(i * Math.PI / 2.0)
+            val aspectRatio = (
+                    mDefaultViewportWidth.toDouble() / mDefaultViewportHeight)
+            quad.x = QUAD_RADIUS * Math.sin(i * Math.PI / 2.0)
+            quad.y = QUAD_RADIUS * aspectRatio * -Math.cos(i * Math.PI / 2.0)
             scene2d?.addChild(quad)
         }
     }
 
+    /**
+     * Initialize the 3D scene.
+     *
+     * Top down view:
+     *
+     *           back
+     *                         +----- + x
+     *          cam 2          |
+     *            |            |
+     *            v            +z
+     *  cam 3 -> obj <- cam 1
+     *            ^
+     *            |
+     *           cam 0
+     *
+     *          front
+     */
     fun initScene3d() {
         //Make the scene and remove all cameras
         scene3d = Scene(this)
         scene3d?.clearCameras()
 
+        //Load the model
+        /*
+        try {
+            val loader = LoaderOBJ(
+                    mContext.resources, mTextureManager, R.raw.utah_teapot)
+            model = loader.parsedObject
+        } catch (e: ParsingException) {
+            e.printStackTrace()
+            model = Torus(1.0f, 0.5f, 40, 20);
+        }
+        */
+        model = Torus(1.0f, 0.5f, 40, 20)
+
         //Make the model use back faces since the camera will be flipped
-        model.isBackSided = true;
+        model?.isBackSided = true;
 
         // Add a purple light shining from directly above
         val light1 = PointLight();
         light1.setPosition(0.0, 1.5, 0.0)
         light1.setColor(0.5f, 0.0f, 1.0f)
-        light1.power = 2.0f
+        light1.power = 3.0f
         scene3d?.addLight(light1)
 
-        // Add a green light shining from directly below
+        // Add a green light shining from the left
         val light2 = PointLight();
-        light2.setPosition(0.0, -1.5, 0.0)
+        light2.setPosition(-1.5, 0.0, 0.0)
         light2.setColor(0.0f, 1.0f, 0.0f)
-        light2.power = 2.0f
+        light2.power = 3.0f
         scene3d?.addLight(light2)
 
-        // Add a white light shining from the front
+        // Add an orange light shining from the front
         val light3 = PointLight();
         light3.setPosition(0.0, 0.0, 1.5)
-        light3.setColor(1.0f, 1.0f, 1.0f)
-        light3.power = 1.5f
+        light3.setColor(1.0f, 0.5f, 0.0f)
+        light3.power = 1.0f
         scene3d?.addLight(light3)
 
         // Make the torus white with diffuse lighting
@@ -136,15 +189,16 @@ class HoloPyramidRenderer : Renderer {
         torusMaterial.enableLighting(true)
         torusMaterial.diffuseMethod = DiffuseMethod.Lambert()
         torusMaterial.color = 0xFFFFFF
-        model.material = torusMaterial
+        model?.material = torusMaterial
         scene3d?.addChild(model)
 
         // Make the four cameras counterclockwise around the y axis
         for (i in 0 until NUM_DIRECTIONS) {
-            val CAMERA_RADIUS = 7.0;
-            val x = CAMERA_RADIUS * Math.cos(i * Math.PI / 2.0)
-            val z = CAMERA_RADIUS * Math.sin(i * Math.PI / 2.0)
-            val angle = 90.0 + 90.0 * i
+            //TODO: Calculate from object bounding box
+            val CAMERA_RADIUS = 7.0
+            val x = CAMERA_RADIUS * Math.sin(i * Math.PI / 2.0)
+            val z = CAMERA_RADIUS * Math.cos(i * Math.PI / 2.0)
+            val angle = 90.0 * i
 
             val cam = HoloPyramidCamera(angle)
             cam.position = Vector3(x, 0.0, z)
@@ -179,7 +233,7 @@ class HoloPyramidRenderer : Renderer {
     }
 
     override fun onRender(ellapsedRealtime: Long, deltaTime: Double) {
-        model.rotate(Vector3.Axis.Y, 1.0);
+        //model?.rotate(Vector3.Axis.Y, 1.0);
 
         // Switch to the 3D scene to render the four textures
         switchSceneDirect(scene3d)
