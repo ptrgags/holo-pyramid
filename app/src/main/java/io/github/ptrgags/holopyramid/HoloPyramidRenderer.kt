@@ -1,6 +1,7 @@
 package io.github.ptrgags.holopyramid
 import android.content.Context
 import android.opengl.GLES20
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import org.rajawali3d.Object3D
@@ -148,17 +149,15 @@ class HoloPyramidRenderer : Renderer {
         scene3d?.clearCameras()
 
         //Load the model
-        /*
         try {
             val loader = LoaderOBJ(
                     mContext.resources, mTextureManager, R.raw.utah_teapot)
+            loader.parse()
             model = loader.parsedObject
         } catch (e: ParsingException) {
-            e.printStackTrace()
+            Log.e("holopyramid", "Error parsing OBJ model", e)
             model = Torus(1.0f, 0.5f, 40, 20);
         }
-        */
-        model = Torus(1.0f, 0.5f, 40, 20)
 
         //Make the model use back faces since the camera will be flipped
         model?.isBackSided = true;
@@ -167,14 +166,14 @@ class HoloPyramidRenderer : Renderer {
         val light1 = PointLight();
         light1.setPosition(0.0, 1.5, 0.0)
         light1.setColor(0.5f, 0.0f, 1.0f)
-        light1.power = 3.0f
+        light1.power = 1.0f
         scene3d?.addLight(light1)
 
         // Add a green light shining from the left
         val light2 = PointLight();
         light2.setPosition(-1.5, 0.0, 0.0)
         light2.setColor(0.0f, 1.0f, 0.0f)
-        light2.power = 3.0f
+        light2.power = 1.0f
         scene3d?.addLight(light2)
 
         // Add an orange light shining from the front
@@ -195,7 +194,7 @@ class HoloPyramidRenderer : Renderer {
         // Make the four cameras counterclockwise around the y axis
         for (i in 0 until NUM_DIRECTIONS) {
             //TODO: Calculate from object bounding box
-            val CAMERA_RADIUS = 7.0
+            val CAMERA_RADIUS = 4.0
             val x = CAMERA_RADIUS * Math.sin(i * Math.PI / 2.0)
             val z = CAMERA_RADIUS * Math.cos(i * Math.PI / 2.0)
             val angle = 90.0 * i
@@ -233,7 +232,7 @@ class HoloPyramidRenderer : Renderer {
     }
 
     override fun onRender(ellapsedRealtime: Long, deltaTime: Double) {
-        //model?.rotate(Vector3.Axis.Y, 1.0);
+        model?.rotate(Vector3.Axis.Y, 1.0);
 
         // Switch to the 3D scene to render the four textures
         switchSceneDirect(scene3d)
