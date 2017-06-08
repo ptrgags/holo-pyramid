@@ -10,7 +10,7 @@ import org.rajawali3d.loader.ParsingException
 import org.rajawali3d.math.vector.Vector3
 import org.rajawali3d.primitives.Torus
 import org.rajawali3d.renderer.RenderTarget
-import org.rajawali3d.renderer.Renderer;
+import org.rajawali3d.renderer.Renderer
 
 /**
  * NOTE: This is temporary to help me learn the Rajawali library
@@ -18,10 +18,12 @@ import org.rajawali3d.renderer.Renderer;
  * This is the tutorial here but done in Kotlin:
  * http://www.clintonmedbery.com/basic-rajawali3d-tutorial-for-android/
  */
-class HoloPyramidRenderer : Renderer {
+class HoloPyramidRenderer(context: Context?) : Renderer(context) {
+    init {
+        setFrameRate(60)
+    }
 
     companion object {
-        val TAG = "holopyramid-renderer"
         val NUM_VIEWS = 4
         val VIEWPORT_DIVISOR = 4
     }
@@ -39,13 +41,10 @@ class HoloPyramidRenderer : Renderer {
     /** List of render targets */
     val holoTargets: MutableList<RenderTarget> = mutableListOf()
 
-    constructor(context: Context?): super(context) {
-        setFrameRate(60)
-    }
-
     /**
      * Touching the left half of the screen rotates the model
      * one way, the other half rotates it the other way.
+     * TODO: Maybe remove this and have two rotation modes?
      */
     override fun onTouchEvent(event: MotionEvent?) {
         val x = event?.x ?: 0.0f
@@ -80,11 +79,19 @@ class HoloPyramidRenderer : Renderer {
             return false
     }
 
+    /**
+     * Since there are four views of the same object, we need to render
+     * to four separate buffers. The render holds on to these render
+     * targets, though they are also passed to the 2D scene to texture
+     * the screen quads.
+     *
+     * This populates holoTargets
+     */
     fun createRenderTargets() {
         for (i in 0 until NUM_VIEWS) {
             //Make a render target and add to the list
             val target = RenderTarget(
-                    "holoView${i}",
+                    "holoView$i",
                     mDefaultViewportWidth / VIEWPORT_DIVISOR,
                     mDefaultViewportHeight / VIEWPORT_DIVISOR)
             target.fullscreen = false
@@ -99,7 +106,7 @@ class HoloPyramidRenderer : Renderer {
                 mDefaultViewportWidth.toDouble() / mDefaultViewportHeight)
 
         createRenderTargets()
-        scene2d = HoloPyramidScene2D(this, holoTargets, aspectRatio);
+        scene2d = HoloPyramidScene2D(this, holoTargets, aspectRatio)
 
         //Load the model
         //TODO: The model should be loaded in the Activity
@@ -110,7 +117,7 @@ class HoloPyramidRenderer : Renderer {
             model = loader.parsedObject
         } catch (e: ParsingException) {
             Log.e("holopyramid", "Error parsing OBJ model", e)
-            model = Torus(1.0f, 0.5f, 40, 20);
+            model = Torus(1.0f, 0.5f, 40, 20)
         }
 
         scene3d = HoloPyramidScene3D(this, model!!)

@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
         // Create a view for Rajawali rendering
         val surface = SurfaceView(this)
         surface.setFrameRate(60.0)
-        surface.renderMode = ISurface.RENDERMODE_WHEN_DIRTY;
+        surface.renderMode = ISurface.RENDERMODE_WHEN_DIRTY
         addContentView(
                 surface,
                 ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT))

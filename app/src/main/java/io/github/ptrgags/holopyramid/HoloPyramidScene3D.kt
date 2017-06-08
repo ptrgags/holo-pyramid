@@ -1,6 +1,5 @@
 package io.github.ptrgags.holopyramid
 
-import android.util.Log
 import org.rajawali3d.Object3D
 import org.rajawali3d.lights.PointLight
 import org.rajawali3d.materials.Material
@@ -25,22 +24,24 @@ import org.rajawali3d.scene.Scene
  *           cam 0
  *
  *          front
+ * @param renderer the parent Renderer (used by Scene)
+ * @param model the 3D model to display in the screen
  */
-class HoloPyramidScene3D : Scene {
+class HoloPyramidScene3D(
+        renderer: Renderer,
+        val model: Object3D) : Scene(renderer) {
+
     companion object {
         // Number of views we need
         val NUM_CAMERAS = 4
         /**
          * Distance from center of object to any one of the cameras
-         * since ecameras lie on a circle of this radius
+         * since cameras lie on a circle of this radius
          */
         val CAMERA_RADIUS = 2.0
     }
 
-    var model: Object3D? = null
-
-    constructor(renderer: Renderer, model: Object3D) : super(renderer) {
-        this.model = model
+    init {
         initModel()
         initLights()
         initCameras()
@@ -49,18 +50,18 @@ class HoloPyramidScene3D : Scene {
     private fun initModel() {
         // Since the cameras will flip the view vertically, we need to flip
         // all the faces
-        model?.isBackSided = true
+        model.isBackSided = true
 
         // Make the model white with diffuse lighting
         val torusMaterial = Material()
         torusMaterial.enableLighting(true)
         torusMaterial.diffuseMethod = DiffuseMethod.Lambert()
         torusMaterial.color = 0xFFFFFF
-        model?.material = torusMaterial
+        model.material = torusMaterial
         addChild(model)
 
         // Calculate the maximum dimension in the xz-plane
-        val bbox = model?.boundingBox
+        val bbox = model.boundingBox
         val minDims = bbox?.min ?: Vector3()
         val maxDims = bbox?.max ?: Vector3()
         val dims = maxDims.subtract(minDims)
@@ -69,29 +70,29 @@ class HoloPyramidScene3D : Scene {
         // Scale down the model so its maximum dimension is 1.
         //TODO: This is not exactly correct.
         val scale = 1.0 / maxSize
-        model?.setScale(scale, scale, scale)
+        model.setScale(scale, scale, scale)
 
-        //TODO: Use a slider to adjust the z position of the model.
+        //TODO: Use a slider to adjust the z position of the model?.
     }
 
     private fun initLights() {
-        //TODO: Not sure what lights to use?
+        //TODO: what lighting should the scene have?
         // Add a purple light shining from directly above
-        val light1 = PointLight();
+        val light1 = PointLight()
         light1.setPosition(0.0, 1.5, 0.0)
         light1.setColor(0.5f, 0.0f, 1.0f)
         light1.power = 1.0f
         addLight(light1)
 
         // Add a green light shining from the left
-        val light2 = PointLight();
+        val light2 = PointLight()
         light2.setPosition(-1.5, 0.0, 0.0)
         light2.setColor(0.0f, 1.0f, 0.0f)
         light2.power = 1.0f
         addLight(light2)
 
         // Add an orange light shining from the front
-        val light3 = PointLight();
+        val light3 = PointLight()
         light3.setPosition(0.0, 0.0, 1.5)
         light3.setColor(1.0f, 0.5f, 0.0f)
         light3.power = 1.0f
@@ -113,5 +114,6 @@ class HoloPyramidScene3D : Scene {
         }
         switchCamera(0)
     }
+
 
 }

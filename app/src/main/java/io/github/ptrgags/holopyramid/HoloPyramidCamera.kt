@@ -2,7 +2,6 @@ package io.github.ptrgags.holopyramid
 
 import org.rajawali3d.cameras.Camera
 import org.rajawali3d.math.Matrix4
-import org.rajawali3d.math.Quaternion
 import org.rajawali3d.math.vector.Vector3
 
 /**
@@ -17,15 +16,11 @@ import org.rajawali3d.math.vector.Vector3
  *
  * All this is done by overriding the results of getProjectionMatrix
  */
-class HoloPyramidCamera : Camera {
-    /**
-     * Each viewport is rotated a different multiple of 90 degrees.
-     */
-    var rotAngle = 0.0
-
-    constructor(rotAngle: Double): super() {
-        this.rotAngle = rotAngle
-    }
+class HoloPyramidCamera(
+        /**
+         * Each viewport is rotated a different multiple of 90 degrees.
+         */
+        var rotAngle: Double) : Camera() {
 
     /**
      * Take the projection matrix and apply a rotation and flip to get the

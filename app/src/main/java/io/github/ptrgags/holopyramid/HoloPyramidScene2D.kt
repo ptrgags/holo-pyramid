@@ -1,7 +1,6 @@
 package io.github.ptrgags.holopyramid
 
 import android.util.Log
-import io.github.ptrgags.holopyramid.HoloPyramidRenderer.Companion.TAG
 import org.rajawali3d.materials.Material
 import org.rajawali3d.materials.textures.ATexture
 import org.rajawali3d.primitives.ScreenQuad
@@ -27,8 +26,16 @@ import org.rajawali3d.scene.Scene
  *   |
  *   +------- +x
  *
+ * @param renderer the parent renderer (needed by Scene)
+ * @param renderTargets list of the four render targets, one for each
+ *      view of the objectt
+ * @param aspectRatio aspect ratio. This is used to position the screen quads
  */
-class HoloPyramidScene2D : Scene {
+class HoloPyramidScene2D(
+        renderer: Renderer,
+        renderTargets: List<RenderTarget>,
+        aspectRatio: Double) : Scene(renderer) {
+
     companion object {
         /** There are four views for the four sides of the pyramid */
         val NUM_QUADS = 4
@@ -43,13 +50,19 @@ class HoloPyramidScene2D : Scene {
         val TAG = "holopyramid-scene2d"
     }
 
-    constructor(
-            renderer: Renderer,
-            renderTargets: List<RenderTarget>,
-            aspectRatio: Double) : super(renderer) {
+    init {
         createQuads(renderTargets, aspectRatio)
+        //TODO: Mark the center of the screen somehow.
     }
 
+    /**
+     * Create four ScreenQuads, one for each view of the object
+     * @param targets the render targets that are used to texture
+     *      the ScreenQuads
+     * @param aspectRatio the aspect ratio of the viewport. This allows
+     *      the quads to be positioned the same distance from the center
+     *      of the screen in both the x and y directions.
+     */
     private fun createQuads(targets: List<RenderTarget>, aspectRatio: Double) {
         for (i in 0 until NUM_QUADS) {
             // Make a texture from the render target
