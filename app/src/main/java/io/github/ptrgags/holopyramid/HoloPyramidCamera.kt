@@ -15,7 +15,7 @@ import org.rajawali3d.math.vector.Vector3
  * IMPORTANT: this flips faces backwards, so make sure to use
  * glCullFace(GL_FRONT) before rendering
  *
- * All this is done by overriding the results of getViewMatrix
+ * All this is done by overriding the results of getProjectionMatrix
  */
 class HoloPyramidCamera : Camera {
     /**

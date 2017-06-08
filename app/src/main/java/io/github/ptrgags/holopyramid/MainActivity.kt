@@ -13,17 +13,22 @@ class MainActivity : AppCompatActivity() {
     var renderer: HoloPyramidRenderer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Set up the activity
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Create a view for Rajawali rendering
         val surface = SurfaceView(this)
         surface.setFrameRate(60.0)
         surface.renderMode = ISurface.RENDERMODE_WHEN_DIRTY;
-
         addContentView(
                 surface,
                 ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT))
 
+        // TODO: Select a 3D model to display in the holopyramid
+
+        // Set up the custom renderer
+        // TODO: pass the 3D model to the renderer
         renderer = HoloPyramidRenderer(this)
         surface.setSurfaceRenderer(renderer)
     }
@@ -34,13 +39,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        renderer?.onKeyUp(keyCode, event)
-        return true
+        return renderer?.onKeyUp(keyCode, event) ?: false
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        renderer?.onKeyDown(keyCode, event)
-        return true
+        return renderer?.onKeyDown(keyCode, event) ?: false
     }
 }
 

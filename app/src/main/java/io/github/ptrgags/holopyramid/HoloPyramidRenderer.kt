@@ -5,20 +5,12 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import org.rajawali3d.Object3D
-import org.rajawali3d.cameras.Camera
-import org.rajawali3d.lights.DirectionalLight
-import org.rajawali3d.lights.PointLight
 import org.rajawali3d.loader.LoaderOBJ
 import org.rajawali3d.loader.ParsingException
-import org.rajawali3d.materials.Material
-import org.rajawali3d.materials.methods.DiffuseMethod
-import org.rajawali3d.materials.textures.ATexture
 import org.rajawali3d.math.vector.Vector3
-import org.rajawali3d.primitives.ScreenQuad
 import org.rajawali3d.primitives.Torus
 import org.rajawali3d.renderer.RenderTarget
 import org.rajawali3d.renderer.Renderer;
-import org.rajawali3d.scene.Scene
 
 /**
  * NOTE: This is temporary to help me learn the Rajawali library
@@ -27,128 +19,90 @@ import org.rajawali3d.scene.Scene
  * http://www.clintonmedbery.com/basic-rajawali3d-tutorial-for-android/
  */
 class HoloPyramidRenderer : Renderer {
+
     companion object {
-        val NUM_DIRECTIONS = 4;
+        val TAG = "holopyramid-renderer"
+        val NUM_VIEWS = 4
+        val VIEWPORT_DIVISOR = 4
     }
 
     var model: Object3D? = null
-    var cameraNum = 0
 
     /**
      * This scene is to hold the four planes that represent
      * the four views of the object. It uses a default camera
      */
-    var scene2d: Scene? = null
-    /**
-     * This scene has the object and the four cameras
-     */
-    var scene3d: Scene? = null
+    var scene2d: HoloPyramidScene2D? = null
+    /** This scene has the object and the four cameras */
+    var scene3d: HoloPyramidScene3D? = null
+
+    /** List of render targets */
     val holoTargets: MutableList<RenderTarget> = mutableListOf()
 
     constructor(context: Context?): super(context) {
         setFrameRate(60)
     }
 
+    /**
+     * Touching the left half of the screen rotates the model
+     * one way, the other half rotates it the other way.
+     */
     override fun onTouchEvent(event: MotionEvent?) {
-    }
-
-    fun onKeyUp(keyCode: Int, event: KeyEvent?) {
-        if (keyCode == KeyEvent.KEYCODE_BUTTON_A) {
-            cameraNum++
-            cameraNum %= currentScene.cameraCount
-            currentScene.switchCamera(cameraNum)
-        }
-    }
-
-    fun onKeyDown(keyCode: Int, event: KeyEvent?) {
-        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT)
-            model?.rotate(Vector3.Axis.Y, 3.0)
-        else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
-            model?.rotate(Vector3.Axis.Y, -3.0)
+        val x = event?.x ?: 0.0f
+        val percent = x / mDefaultViewportWidth
+        val rotAmount = if (percent > 0.5) -3.0 else 3.0
+        model?.rotate(Vector3.Axis.Y, rotAmount)
     }
 
     /**
-     * Initialize the 2D scene with the four ScreenQuads that are textured
-     * with the four views of the object.
-     *
-     *  Scene layout
-     *
-     *         quad 2 (cam 2)
-     *
-     *  quad 3 (cam 3)     quad 1 (cam 1)
-     *
-     *          quad 0 (cam 0)
-     *
-     *   +y
-     *   |
-     *   |
-     *   |
-     *   +------- +x
-     *
+     * Rajawalli only handles touch events, it would be nice if it did
+     * keyboard events too since I'm using a controller.
+     * TODO: Maybe have the A button switch between manual/automatic
+     * rotation?
      */
-    fun initScene2d() {
-        scene2d = Scene(this)
+    fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        return false
+    }
 
-        //Make the screen quads
-        for (i in 0 until NUM_DIRECTIONS) {
-            //Make a render target
+    /**
+     * When the D-pad is held down, rotate the model.
+     */
+    fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        //Rotate with the D-Pad.
+        //TODO: Instead of rotating the models, move the cameras along a sphere?
+        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+            model?.rotate(Vector3.Axis.Y, 3.0)
+            return true
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            model?.rotate(Vector3.Axis.Y, -3.0)
+            return true
+        } else
+            return false
+    }
+
+    fun createRenderTargets() {
+        for (i in 0 until NUM_VIEWS) {
+            //Make a render target and add to the list
             val target = RenderTarget(
                     "holoView${i}",
-                    mDefaultViewportWidth / 4,
-                    mDefaultViewportHeight / 4)
+                    mDefaultViewportWidth / VIEWPORT_DIVISOR,
+                    mDefaultViewportHeight / VIEWPORT_DIVISOR)
             target.fullscreen = false
             addRenderTarget(target)
             holoTargets.add(target)
-
-            //Make the material
-            val mat = Material()
-            mat.colorInfluence = 0.0f
-            try {
-                mat.addTexture(target.texture)
-            } catch (e: ATexture.TextureException) {
-                e.printStackTrace()
-            }
-
-            //Make the quad
-            val quad = ScreenQuad()
-            quad.scaleY = 0.25
-            quad.scaleX = 0.25
-            quad.material = mat
-
-            // Distance from center screen to the circle that connects
-            // the centers of all the quads
-            val QUAD_RADIUS = 0.25
-            val aspectRatio = (
-                    mDefaultViewportWidth.toDouble() / mDefaultViewportHeight)
-            quad.x = QUAD_RADIUS * Math.sin(i * Math.PI / 2.0)
-            quad.y = QUAD_RADIUS * aspectRatio * -Math.cos(i * Math.PI / 2.0)
-            scene2d?.addChild(quad)
         }
     }
 
-    /**
-     * Initialize the 3D scene.
-     *
-     * Top down view:
-     *
-     *           back
-     *                         +----- + x
-     *          cam 2          |
-     *            |            |
-     *            v            +z
-     *  cam 3 -> obj <- cam 1
-     *            ^
-     *            |
-     *           cam 0
-     *
-     *          front
-     */
-    fun initScene3d() {
-        //Make the scene and remove all cameras
-        scene3d = Scene(this)
-        scene3d?.clearCameras()
+    override fun initScene() {
+        // Calculate the aspect ratio of the screen
+        val aspectRatio = (
+                mDefaultViewportWidth.toDouble() / mDefaultViewportHeight)
+
+        createRenderTargets()
+        scene2d = HoloPyramidScene2D(this, holoTargets, aspectRatio);
 
         //Load the model
+        //TODO: The model should be loaded in the Activity
         try {
             val loader = LoaderOBJ(
                     mContext.resources, mTextureManager, R.raw.utah_teapot)
@@ -159,74 +113,8 @@ class HoloPyramidRenderer : Renderer {
             model = Torus(1.0f, 0.5f, 40, 20);
         }
 
-        //Make the model use back faces since the camera will be flipped
-        model?.isBackSided = true;
+        scene3d = HoloPyramidScene3D(this, model!!)
 
-        // Add a purple light shining from directly above
-        val light1 = PointLight();
-        light1.setPosition(0.0, 1.5, 0.0)
-        light1.setColor(0.5f, 0.0f, 1.0f)
-        light1.power = 1.0f
-        scene3d?.addLight(light1)
-
-        // Add a green light shining from the left
-        val light2 = PointLight();
-        light2.setPosition(-1.5, 0.0, 0.0)
-        light2.setColor(0.0f, 1.0f, 0.0f)
-        light2.power = 1.0f
-        scene3d?.addLight(light2)
-
-        // Add an orange light shining from the front
-        val light3 = PointLight();
-        light3.setPosition(0.0, 0.0, 1.5)
-        light3.setColor(1.0f, 0.5f, 0.0f)
-        light3.power = 1.0f
-        scene3d?.addLight(light3)
-
-        // Make the torus white with diffuse lighting
-        val torusMaterial = Material()
-        torusMaterial.enableLighting(true)
-        torusMaterial.diffuseMethod = DiffuseMethod.Lambert()
-        torusMaterial.color = 0xFFFFFF
-        model?.material = torusMaterial
-        scene3d?.addChild(model)
-
-        // Calculate the maximum dimension in the xz-plane
-        val bbox = model?.boundingBox
-        val minDims = bbox?.min ?: Vector3()
-        val maxDims = bbox?.max ?: Vector3()
-        val dims = maxDims.subtract(minDims)
-        val maxSize = Math.max(dims.x, dims.z)
-
-        // Scale down the model so its maximum dimension is 1.
-        val scale = 1.0 / maxSize
-        Log.i("holobanana", scale.toString())
-        model?.setScale(scale, scale, scale)
-
-        // Make the four cameras counterclockwise around the y axis
-        for (i in 0 until NUM_DIRECTIONS) {
-            val CAMERA_RADIUS = 2.0
-            val x = CAMERA_RADIUS * Math.sin(i * Math.PI / 2.0)
-            val z = CAMERA_RADIUS * Math.cos(i * Math.PI / 2.0)
-            val angle = 90.0 * i
-
-            val cam = HoloPyramidCamera(angle)
-            cam.position = Vector3(x, 0.0, z)
-            cam.lookAt = Vector3(0.0)
-            cam.setProjectionMatrix(
-                    mDefaultViewportWidth / 4, mDefaultViewportHeight / 4)
-            scene3d?.addCamera(cam)
-        }
-
-        scene3d?.switchCamera(0)
-    }
-
-    override fun initScene() {
-        // Make the new scenes
-        initScene2d()
-        initScene3d()
-
-        //Replace the default scene with the two scenes
         clearScenes()
         addScene(scene3d)
         addScene(scene2d)
@@ -243,17 +131,18 @@ class HoloPyramidRenderer : Renderer {
     }
 
     override fun onRender(ellapsedRealtime: Long, deltaTime: Double) {
-        model?.rotate(Vector3.Axis.Y, 1.0);
-
         // Switch to the 3D scene to render the four textures
         switchSceneDirect(scene3d)
 
         //Shrink the viewport to something smaller.
         GLES20.glViewport(
-                0, 0, mDefaultViewportWidth / 4, mDefaultViewportHeight / 4)
+                0,
+                0,
+                mDefaultViewportWidth / VIEWPORT_DIVISOR,
+                mDefaultViewportHeight / VIEWPORT_DIVISOR)
 
-        // Render each plane
-        for (i in 0 until NUM_DIRECTIONS) {
+        // Render each cameraa view
+        for (i in 0 until NUM_VIEWS) {
             currentScene.switchCamera(i)
             renderTarget = holoTargets[i]
             render(ellapsedRealtime, deltaTime)
