@@ -38,7 +38,7 @@ class HoloPyramidScene3D(
          * Distance from center of object to any one of the cameras
          * since cameras lie on a circle of this radius
          */
-        val CAMERA_RADIUS = 2.0
+        val CAMERA_RADIUS = 5.0
     }
 
     init {
@@ -60,16 +60,16 @@ class HoloPyramidScene3D(
         model.material = torusMaterial
         addChild(model)
 
-        // Calculate the maximum dimension in the xz-plane
+        // Calculate the maximum dimension in the xz plane
         val bbox = model.boundingBox
         val minDims = bbox?.min ?: Vector3()
         val maxDims = bbox?.max ?: Vector3()
         val dims = maxDims.subtract(minDims)
         val maxSize = Math.max(dims.x, dims.z)
 
-        // Scale down the model so its maximum dimension is 1.
-        //TODO: This is not exactly correct.
-        val scale = 1.0 / maxSize
+        // We want the model to fit within the unit box, which has a
+        // width of 2. So divide by the max dimension and multiply by 2
+        val scale = 2.0 / maxSize
         model.setScale(scale, scale, scale)
 
         //TODO: Use a slider to adjust the z position of the model?.

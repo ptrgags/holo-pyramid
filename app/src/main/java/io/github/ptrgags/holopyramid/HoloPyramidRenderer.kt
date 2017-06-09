@@ -67,6 +67,8 @@ class HoloPyramidRenderer(context: Context?) : Renderer(context) {
      * When the D-pad is held down, rotate the model.
      */
     fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        val DELTA = 0.2
+
         //Rotate with the D-Pad.
         //TODO: Instead of rotating the models, move the cameras along a sphere?
         if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
@@ -74,6 +76,19 @@ class HoloPyramidRenderer(context: Context?) : Renderer(context) {
             return true
         } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
             model?.rotate(Vector3.Axis.Y, -3.0)
+            return true
+        } else if (keyCode == KeyEvent.KEYCODE_BUTTON_L1) {
+            // ew handle this somewhere where the model is mutable
+            if (model != null) {
+                val y = model?.y ?: 0.0
+                model?.y = y + DELTA
+            }
+            return true
+        } else if (keyCode == KeyEvent.KEYCODE_BUTTON_R1) {
+            if (model != null) {
+                val y = model?.y ?: 0.0
+                model?.y = y - DELTA
+            }
             return true
         } else
             return false
