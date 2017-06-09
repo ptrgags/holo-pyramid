@@ -2,20 +2,18 @@ package io.github.ptrgags.holopyramid
 
 import org.rajawali3d.Object3D
 import org.rajawali3d.math.Quaternion
+import org.rajawali3d.math.vector.Vector3
 
 class ModelTransformer {
     companion object {
         val AUTO_YAW_DELTA = 1.0
-        val YAW_DELTA = 3.0
-        val PITCH_DELTA = 3.0
+        val YAW_DELTA = 5.0
+        val PITCH_DELTA = 5.0
         val HEIGHT_DELTA = 0.2
     }
 
-    //TODO: Use a quaternion instead for manual rotation.
-    /** Pitch of the model in manual mode */
-    private var pitch = 0.0
-    /** yaw of the model in manual mode */
-    private var yaw = 0.0
+    /** Keep track of the current rotation */
+    private var manualRotation = Quaternion()
 
     /** yaw in automatic mode */
     private var autoYaw = 0.0
@@ -45,7 +43,8 @@ class ModelTransformer {
     fun adjustYaw(direction: Double) {
         // Just in case
         val sign = Math.signum(direction)
-        yaw += sign * YAW_DELTA
+        val newRot = Quaternion(Vector3.Y, sign * YAW_DELTA)
+        manualRotation.multiply(newRot)
     }
 
     /**
@@ -55,7 +54,8 @@ class ModelTransformer {
     fun adjustPitch(direction: Double) {
         // Just in case
         val sign = Math.signum(direction)
-        pitch += sign * PITCH_DELTA
+        val newRot = Quaternion(Vector3.X, sign * PITCH_DELTA)
+        manualRotation.multiply(newRot)
     }
 
     /**
@@ -72,8 +72,7 @@ class ModelTransformer {
      * Reset the manual pitch and yaw
      */
     fun resetManualRotation() {
-        pitch = 0.0
-        yaw = 0.0
+        manualRotation = Quaternion()
     }
 
     /**
@@ -84,7 +83,7 @@ class ModelTransformer {
         val rot = if (automatic) {
             Quaternion().fromEuler(autoYaw, 0.0, 0.0)
         } else {
-            Quaternion().fromEuler(yaw, pitch, 0.0)
+            manualRotation
         }
         model.setRotation(rot)
 
