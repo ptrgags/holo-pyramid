@@ -34,7 +34,7 @@ import org.rajawali3d.scene.Scene
 class HoloPyramidScene2D(
         renderer: Renderer,
         renderTargets: List<RenderTarget>,
-        aspectRatio: Double) : Scene(renderer) {
+        val aspectRatio: Double) : Scene(renderer) {
 
     companion object {
         /** There are four views for the four sides of the pyramid */
@@ -51,19 +51,17 @@ class HoloPyramidScene2D(
     }
 
     init {
-        createQuads(renderTargets, aspectRatio)
-        //TODO: Mark the center of the screen somehow.
+        createQuads(renderTargets)
+        createCenterMarker()
     }
+
 
     /**
      * Create four ScreenQuads, one for each view of the object
      * @param targets the render targets that are used to texture
      *      the ScreenQuads
-     * @param aspectRatio the aspect ratio of the viewport. This allows
-     *      the quads to be positioned the same distance from the center
-     *      of the screen in both the x and y directions.
      */
-    private fun createQuads(targets: List<RenderTarget>, aspectRatio: Double) {
+    private fun createQuads(targets: List<RenderTarget>) {
         for (i in 0 until NUM_QUADS) {
             // Make a texture from the render target
             val mat = Material()
@@ -86,5 +84,24 @@ class HoloPyramidScene2D(
             quad.y = QUAD_RADIUS * aspectRatio * -Math.cos(i * Math.PI / 2.0)
             addChild(quad)
         }
+    }
+
+    /**
+     * Make another screen quad in the center of the screen.
+     * This will make it easier to line up the pyramid mirror
+     */
+    private fun createCenterMarker() {
+        // Simple solid color material. It's dark
+        // so it doesn't show up much in the mirror yet it stands out
+        // against the black background
+        val mat = Material()
+        mat.color = 0x202020
+
+        // Add a small quad to mark the center of the screen
+        val quad = ScreenQuad()
+        val MARKER_SCALE = 0.1
+        quad.setScale(MARKER_SCALE, MARKER_SCALE * aspectRatio, 1.0)
+        quad.material = mat
+        addChild(quad)
     }
 }
