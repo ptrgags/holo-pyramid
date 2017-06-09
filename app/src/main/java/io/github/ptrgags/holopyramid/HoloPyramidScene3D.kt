@@ -71,8 +71,6 @@ class HoloPyramidScene3D(
         // width of 2. So divide by the max dimension and multiply by 2
         val scale = 2.0 / maxSize
         model.setScale(scale, scale, scale)
-
-        //TODO: Use a slider to adjust the z position of the model?.
     }
 
     private fun initLights() {

@@ -1,14 +1,10 @@
 package io.github.ptrgags.holopyramid
 import android.content.Context
 import android.opengl.GLES20
-import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import org.rajawali3d.Object3D
-import org.rajawali3d.loader.LoaderOBJ
-import org.rajawali3d.loader.ParsingException
 import org.rajawali3d.math.vector.Vector3
-import org.rajawali3d.primitives.Torus
 import org.rajawali3d.renderer.RenderTarget
 import org.rajawali3d.renderer.Renderer
 
@@ -18,7 +14,11 @@ import org.rajawali3d.renderer.Renderer
  * This is the tutorial here but done in Kotlin:
  * http://www.clintonmedbery.com/basic-rajawali3d-tutorial-for-android/
  */
-class HoloPyramidRenderer(context: Context?) : Renderer(context) {
+class HoloPyramidRenderer(
+        context: Context?,
+        val model: Object3D,
+        val transformer: ModelTransformer) : Renderer(context) {
+
     init {
         setFrameRate(60)
     }
@@ -27,8 +27,6 @@ class HoloPyramidRenderer(context: Context?) : Renderer(context) {
         val NUM_VIEWS = 4
         val VIEWPORT_DIVISOR = 4
     }
-
-    var model: Object3D? = null
 
     /**
      * This scene is to hold the four planes that represent
@@ -46,53 +44,7 @@ class HoloPyramidRenderer(context: Context?) : Renderer(context) {
      * one way, the other half rotates it the other way.
      * TODO: Maybe remove this and have two rotation modes?
      */
-    override fun onTouchEvent(event: MotionEvent?) {
-        val x = event?.x ?: 0.0f
-        val percent = x / mDefaultViewportWidth
-        val rotAmount = if (percent > 0.5) -3.0 else 3.0
-        model?.rotate(Vector3.Axis.Y, rotAmount)
-    }
-
-    /**
-     * Rajawalli only handles touch events, it would be nice if it did
-     * keyboard events too since I'm using a controller.
-     * TODO: Maybe have the A button switch between manual/automatic
-     * rotation?
-     */
-    fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        return false
-    }
-
-    /**
-     * When the D-pad is held down, rotate the model.
-     */
-    fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        val DELTA = 0.2
-
-        //Rotate with the D-Pad.
-        //TODO: Instead of rotating the models, move the cameras along a sphere?
-        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
-            model?.rotate(Vector3.Axis.Y, 3.0)
-            return true
-        } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-            model?.rotate(Vector3.Axis.Y, -3.0)
-            return true
-        } else if (keyCode == KeyEvent.KEYCODE_BUTTON_L1) {
-            // ew handle this somewhere where the model is mutable
-            if (model != null) {
-                val y = model?.y ?: 0.0
-                model?.y = y + DELTA
-            }
-            return true
-        } else if (keyCode == KeyEvent.KEYCODE_BUTTON_R1) {
-            if (model != null) {
-                val y = model?.y ?: 0.0
-                model?.y = y - DELTA
-            }
-            return true
-        } else
-            return false
-    }
+    override fun onTouchEvent(event: MotionEvent?) {}
 
     /**
      * Since there are four views of the same object, we need to render
@@ -123,19 +75,8 @@ class HoloPyramidRenderer(context: Context?) : Renderer(context) {
         createRenderTargets()
         scene2d = HoloPyramidScene2D(this, holoTargets, aspectRatio)
 
-        //Load the model
-        //TODO: The model should be loaded in the Activity
-        try {
-            val loader = LoaderOBJ(
-                    mContext.resources, mTextureManager, R.raw.utah_teapot)
-            loader.parse()
-            model = loader.parsedObject
-        } catch (e: ParsingException) {
-            Log.e("holopyramid", "Error parsing OBJ model", e)
-            model = Torus(1.0f, 0.5f, 40, 20)
-        }
 
-        scene3d = HoloPyramidScene3D(this, model!!)
+        scene3d = HoloPyramidScene3D(this, model)
 
         clearScenes()
         addScene(scene3d)
@@ -153,6 +94,12 @@ class HoloPyramidRenderer(context: Context?) : Renderer(context) {
     }
 
     override fun onRender(ellapsedRealtime: Long, deltaTime: Double) {
+        //Update the transformer's rotation
+        transformer.autoRotate()
+
+        //Apply the rotation to the model before rendering the 3D scene
+        transformer.applyTransformation(model)
+
         // Switch to the 3D scene to render the four textures
         switchSceneDirect(scene3d)
 

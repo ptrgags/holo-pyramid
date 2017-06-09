@@ -15,12 +15,10 @@ import org.rajawali3d.math.vector.Vector3
  * glCullFace(GL_FRONT) before rendering
  *
  * All this is done by overriding the results of getProjectionMatrix
+ * @param rotAngle the angle at which the quad is rotated
  */
 class HoloPyramidCamera(
-        /**
-         * Each viewport is rotated a different multiple of 90 degrees.
-         */
-        var rotAngle: Double) : Camera() {
+        val rotAngle: Double) : Camera() {
 
     /**
      * Take the projection matrix and apply a rotation and flip to get the
