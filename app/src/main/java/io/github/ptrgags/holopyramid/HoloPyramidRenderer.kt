@@ -1,10 +1,11 @@
 package io.github.ptrgags.holopyramid
 import android.content.Context
 import android.opengl.GLES20
-import android.view.KeyEvent
+import android.util.Log
 import android.view.MotionEvent
 import org.rajawali3d.Object3D
-import org.rajawali3d.math.vector.Vector3
+import org.rajawali3d.loader.LoaderOBJ
+import org.rajawali3d.primitives.Torus
 import org.rajawali3d.renderer.RenderTarget
 import org.rajawali3d.renderer.Renderer
 
@@ -16,7 +17,7 @@ import org.rajawali3d.renderer.Renderer
  */
 class HoloPyramidRenderer(
         context: Context?,
-        val model: Object3D,
+        val modelId: Int,
         val transformer: ModelTransformer) : Renderer(context) {
 
     init {
@@ -26,6 +27,7 @@ class HoloPyramidRenderer(
     companion object {
         val NUM_VIEWS = 4
         val VIEWPORT_DIVISOR = 4
+        val TAG = "holopyramid-renderer"
     }
 
     /**
@@ -76,12 +78,28 @@ class HoloPyramidRenderer(
         scene2d = HoloPyramidScene2D(this, holoTargets, aspectRatio)
 
 
+        val model = loadModel(modelId)
         scene3d = HoloPyramidScene3D(this, model)
 
         clearScenes()
         addScene(scene3d)
         addScene(scene2d)
         switchScene(0)
+    }
+
+    /**
+     * Attempt to load a model given a resource ID.
+     */
+    fun loadModel(resId: Int): Object3D {
+        try {
+            val loader = LoaderOBJ(
+                    mContext.resources, mTextureManager, resId)
+            loader.parse()
+            return loader.parsedObject
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing OBJ model", e)
+            return Torus(1.0f, 0.5f, 40, 20)
+        }
     }
 
     override fun onOffsetsChanged(
@@ -98,7 +116,7 @@ class HoloPyramidRenderer(
         transformer.autoRotate()
 
         //Apply the rotation to the model before rendering the 3D scene
-        transformer.applyTransformation(model)
+        scene3d?.transformModel(transformer)
 
         // Switch to the 3D scene to render the four textures
         switchSceneDirect(scene3d)

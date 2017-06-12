@@ -52,13 +52,16 @@ class HoloPyramidScene3D(
         // all the faces
         model.isBackSided = true
 
-        // Make the model white with diffuse lighting
-        val torusMaterial = Material()
-        torusMaterial.enableLighting(true)
-        torusMaterial.diffuseMethod = DiffuseMethod.Lambert()
-        torusMaterial.color = 0xFFFFFF
-        model.material = torusMaterial
-        addChild(model)
+        // If no material was specified in the OBJ model, make a default
+        // material of white
+        if (model.material == null) {
+            val mat = Material()
+            mat.enableLighting(true)
+            mat.diffuseMethod = DiffuseMethod.Lambert()
+            mat.color = 0xFFFFFF
+            model.material = mat
+        }
+
 
         // Calculate the maximum dimension in the xz plane
         val bbox = model.boundingBox
@@ -71,6 +74,9 @@ class HoloPyramidScene3D(
         // width of 2. So divide by the max dimension and multiply by 2
         val scale = 2.0 / maxSize
         model.setScale(scale, scale, scale)
+
+        // Finally, add the model to the scene
+        addChild(model)
     }
 
     private fun initLights() {
@@ -78,22 +84,22 @@ class HoloPyramidScene3D(
         // Add a purple light shining from directly above
         val light1 = PointLight()
         light1.setPosition(0.0, 1.5, 0.0)
-        light1.setColor(0.5f, 0.0f, 1.0f)
-        light1.power = 1.0f
+        //light1.setColor(0.5f, 0.0f, 1.0f)
+        //light1.power = 1.0f
         addLight(light1)
 
         // Add a green light shining from the left
         val light2 = PointLight()
         light2.setPosition(-1.5, 0.0, 0.0)
-        light2.setColor(0.0f, 1.0f, 0.0f)
-        light2.power = 1.0f
+        //light2.setColor(0.0f, 1.0f, 0.0f)
+        //light2.power = 1.0f
         addLight(light2)
 
         // Add an orange light shining from the front
         val light3 = PointLight()
         light3.setPosition(0.0, 0.0, 1.5)
-        light3.setColor(1.0f, 0.5f, 0.0f)
-        light3.power = 1.0f
+        //light3.setColor(1.0f, 0.5f, 0.0f)
+        //light3.power = 1.0f
         addLight(light3)
     }
 
@@ -111,6 +117,10 @@ class HoloPyramidScene3D(
             addCamera(cam)
         }
         switchCamera(0)
+    }
+
+    fun  transformModel(transformer: ModelTransformer) {
+        transformer.applyTransformation(model)
     }
 
 

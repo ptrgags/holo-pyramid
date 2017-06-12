@@ -36,10 +36,10 @@ class HoloPyramidActivity : AppCompatActivity() {
                 ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT))
 
         //Load the model and attach it to the transformer
-        loadModel()
+        //loadModel()
 
         // Set up the custom renderer
-        renderer = HoloPyramidRenderer(this, model!!, transformer)
+        renderer = HoloPyramidRenderer(this, R.raw.utah_teapot_obj, transformer)
         surface.setSurfaceRenderer(renderer)
     }
 
@@ -51,7 +51,9 @@ class HoloPyramidActivity : AppCompatActivity() {
     fun loadModel() {
         try {
             val loader = LoaderOBJ(
-                    resources, TextureManager.getInstance(), R.raw.utah_teapot)
+                    resources,
+                    TextureManager.getInstance(),
+                    R.raw.utah_teapot_obj)
             loader.parse()
             model = loader.parsedObject
         } catch (e: ParsingException) {
