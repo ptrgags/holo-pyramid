@@ -9,13 +9,15 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 
 class ModelSelectActivity : AppCompatActivity() {
-    private val modelNames = listOf("Utah Teapot", "Icosahedron")
-    private val modelIds = listOf(R.raw.utah_teapot_obj, R.raw.icosahedron_obj)
+    private val modelNames = listOf("Utah Teapot", "Icosahedron", "Spider")
+    private val modelIds = listOf(
+            R.raw.utah_teapot_obj, R.raw.icosahedron_obj, R.raw.spider_obj)
     lateinit var listView: ListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_model_select)
+        setTitle(R.string.search_menu_title)
 
         // Save a reference to the list view
         listView = findViewById(R.id.model_select_list) as ListView

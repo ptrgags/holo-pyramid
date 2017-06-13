@@ -10,8 +10,7 @@
         android:theme="@style/Theme.AppCompat"
         android:supportsRtl="true">
         <activity
-            android:name=".ModelSelectActivity"
-            android:label="@string/model_select_label">
+            android:name=".ModelSelectActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
