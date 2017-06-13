@@ -34,9 +34,9 @@ class HoloPyramidRenderer(
      * This scene is to hold the four planes that represent
      * the four views of the object. It uses a default camera
      */
-    var scene2d: HoloPyramidScene2D? = null
+    lateinit var scene2d: HoloPyramidScene2D
     /** This scene has the object and the four cameras */
-    var scene3d: HoloPyramidScene3D? = null
+    lateinit var scene3d: HoloPyramidScene3D
 
     /** List of render targets */
     val holoTargets: MutableList<RenderTarget> = mutableListOf()
@@ -44,7 +44,6 @@ class HoloPyramidRenderer(
     /**
      * Touching the left half of the screen rotates the model
      * one way, the other half rotates it the other way.
-     * TODO: Maybe remove this and have two rotation modes?
      */
     override fun onTouchEvent(event: MotionEvent?) {}
 
@@ -116,7 +115,7 @@ class HoloPyramidRenderer(
         transformer.autoRotate()
 
         //Apply the rotation to the model before rendering the 3D scene
-        scene3d?.transformModel(transformer)
+        scene3d.transformModel(transformer)
 
         // Switch to the 3D scene to render the four textures
         switchSceneDirect(scene3d)

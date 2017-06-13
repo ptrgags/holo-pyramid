@@ -3,29 +3,19 @@ package io.github.ptrgags.holopyramid
 import android.os.Bundle
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.KeyEvent
 import android.view.ViewGroup
-import org.rajawali3d.Object3D
-import org.rajawali3d.loader.LoaderOBJ
-import org.rajawali3d.loader.ParsingException
-import org.rajawali3d.materials.textures.TextureManager
-import org.rajawali3d.primitives.Torus
 import org.rajawali3d.view.ISurface
 import org.rajawali3d.view.SurfaceView
 
 class HoloPyramidActivity : AppCompatActivity() {
-    /** The custom renderer. This cannot be initialized until onCreate() */
-    var renderer: HoloPyramidRenderer? = null
-    /** The model to display */
-    var model: Object3D? = null
     /** An object to handle transforming the model */
     val transformer = ModelTransformer()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Set up the activity
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_holopyramid)
 
         // Create a view for Rajawali rendering
         val surface = SurfaceView(this)
@@ -35,31 +25,10 @@ class HoloPyramidActivity : AppCompatActivity() {
                 surface,
                 ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT))
 
-        //Load the model and attach it to the transformer
-        //loadModel()
-
         // Set up the custom renderer
-        renderer = HoloPyramidRenderer(this, R.raw.utah_teapot_obj, transformer)
+        val modelId = intent.extras.getInt("model_id")
+        val renderer = HoloPyramidRenderer(this, modelId, transformer)
         surface.setSurfaceRenderer(renderer)
-    }
-
-    /**
-     * Loaad the teapot model. If it fails, use a torus.
-     *
-     * TODO: Load a model from a URL or get a raw resource by name.
-     */
-    fun loadModel() {
-        try {
-            val loader = LoaderOBJ(
-                    resources,
-                    TextureManager.getInstance(),
-                    R.raw.utah_teapot_obj)
-            loader.parse()
-            model = loader.parsedObject
-        } catch (e: ParsingException) {
-            Log.e("holopyramid", "Error parsing OBJ model", e)
-            model = Torus(1.0f, 0.5f, 40, 20)
-        }
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
@@ -72,7 +41,7 @@ class HoloPyramidActivity : AppCompatActivity() {
                 transformer.resetManualRotation()
                 true
             }
-            else -> false
+            else -> super.onKeyUp(keyCode, event)
         }
     }
 
@@ -102,7 +71,7 @@ class HoloPyramidActivity : AppCompatActivity() {
                 transformer.adjustHeight(-1.0)
                 true
             }
-            else -> false
+            else -> super.onKeyDown(keyCode, event)
         }
     }
 }

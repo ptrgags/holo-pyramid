@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">HoloPyramid</string>
+    <string name="model_select_label">Select a 3D Model</string>
 </resources>
