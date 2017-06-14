@@ -37,7 +37,7 @@ class HoloPyramidActivity : AppCompatActivity() {
                 transformer.toggleMode()
                 true
             }
-            KeyEvent.KEYCODE_BUTTON_B -> {
+            KeyEvent.KEYCODE_BUTTON_START -> {
                 transformer.resetManualRotation()
                 true
             }
