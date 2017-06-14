@@ -47,10 +47,36 @@ class HoloPyramidScene3D(
         initCameras()
     }
 
+    /**
+     * Recursively make sure that the model and all its
+     * children have front-face culling enabled. This is because
+     * the camera's vertical flip will flip all the faces, so back face
+     * culling becomes incorrect
+     */
+    private fun frontFaceCulling(m: Object3D) {
+        // This turns on front face culling
+        m.isBackSided = true
+
+        // Recursively set front face culling
+        for (i in 0 until m.numChildren) {
+            val child = m.getChildAt(i)
+            frontFaceCulling(child)
+        }
+    }
+
     private fun initModel() {
+        frontFaceCulling(model)
+        /*
         // Since the cameras will flip the view vertically, we need to flip
         // all the faces
         model.isBackSided = true
+
+        //Children need to be backsided too :P
+        for (i in 0 until model.numChildren) {
+            val child = model.getChildAt(i)
+            child.isBackSided = true
+        }
+        */
 
         // If no material was specified in the OBJ model, make a default
         // material of white
@@ -61,7 +87,6 @@ class HoloPyramidScene3D(
             mat.color = 0xFFFFFF
             model.material = mat
         }
-
 
         // Calculate the maximum dimension in the xz plane
         val bbox = model.boundingBox

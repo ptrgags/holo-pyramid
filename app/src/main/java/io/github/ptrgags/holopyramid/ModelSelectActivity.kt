@@ -9,9 +9,13 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 
 class ModelSelectActivity : AppCompatActivity() {
-    private val modelNames = listOf("Utah Teapot", "Icosahedron", "Spider")
+    private val modelNames = listOf(
+            "Utah Teapot", "Icosahedron", "Spider", "Steam Train")
     private val modelIds = listOf(
-            R.raw.utah_teapot_obj, R.raw.icosahedron_obj, R.raw.spider_obj)
+            R.raw.utah_teapot_obj,
+            R.raw.icosahedron_obj,
+            R.raw.spider_obj,
+            R.raw.steam_train_obj)
     lateinit var listView: ListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
