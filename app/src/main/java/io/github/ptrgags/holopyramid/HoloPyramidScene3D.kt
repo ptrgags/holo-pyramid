@@ -65,18 +65,9 @@ class HoloPyramidScene3D(
     }
 
     private fun initModel() {
+        // Since the camera flips the projection verttically, we need to
+        // switch from backface culling to frontface culling.
         frontFaceCulling(model)
-        /*
-        // Since the cameras will flip the view vertically, we need to flip
-        // all the faces
-        model.isBackSided = true
-
-        //Children need to be backsided too :P
-        for (i in 0 until model.numChildren) {
-            val child = model.getChildAt(i)
-            child.isBackSided = true
-        }
-        */
 
         // If no material was specified in the OBJ model, make a default
         // material of white
@@ -139,6 +130,11 @@ class HoloPyramidScene3D(
             val cam = HoloPyramidCamera(angle)
             cam.position = Vector3(x, 0.0, z)
             cam.lookAt = Vector3(0.0)
+
+            // The model should fit within the unit sphere, so
+            // set the near and far planes accordingly
+            cam.nearPlane = CAMERA_RADIUS - 2.0
+            cam.farPlane = CAMERA_RADIUS + 2.0
             addCamera(cam)
         }
         switchCamera(0)
