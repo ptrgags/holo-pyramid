@@ -1,7 +1,7 @@
 package io.github.ptrgags.holopyramid
 
 import org.rajawali3d.Object3D
-import org.rajawali3d.lights.PointLight
+import org.rajawali3d.lights.DirectionalLight
 import org.rajawali3d.materials.Material
 import org.rajawali3d.materials.methods.DiffuseMethod
 import org.rajawali3d.math.vector.Vector3
@@ -96,26 +96,16 @@ class HoloPyramidScene3D(
     }
 
     private fun initLights() {
-        //TODO: what lighting should the scene have?
-        // Add a purple light shining from directly above
-        val light1 = PointLight()
-        light1.setPosition(0.0, 1.5, 0.0)
-        //light1.setColor(0.5f, 0.0f, 1.0f)
-        //light1.power = 1.0f
+        // Add a directional light coming in from the front
+        val light1 = DirectionalLight(0.0, 0.0, -1.0)
         addLight(light1)
 
-        // Add a green light shining from the left
-        val light2 = PointLight()
-        light2.setPosition(-1.5, 0.0, 0.0)
-        //light2.setColor(0.0f, 1.0f, 0.0f)
-        //light2.power = 1.0f
+        // Add another light coming coming from the back and the side
+        val light2 = DirectionalLight(1.0, 0.0, 1.0)
         addLight(light2)
 
-        // Add an orange light shining from the front
-        val light3 = PointLight()
-        light3.setPosition(0.0, 0.0, 1.5)
-        //light3.setColor(1.0f, 0.5f, 0.0f)
-        //light3.power = 1.0f
+        // Add another light from the back and the other side
+        val light3 = DirectionalLight(-1.0, 0.0, 1.0)
         addLight(light3)
     }
 
