@@ -29,6 +29,7 @@ of the model.
 
 * Create content for my hologram pyramid
 * Try out the Rajawali wrapper library for OpenGL
+* Try out the Kotlin, now an official language for Android
 * Learn the basics of 3D modeling
 
 ## Usage
